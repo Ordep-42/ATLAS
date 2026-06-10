@@ -4,11 +4,15 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
+import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
+
+@Service
 public class MissionService {
 	
 	private final MissionRepository repository;
 	
-	public MissionService(InMemoryMissionRepository repository) {
+	public MissionService(MissionRepository repository) {
 		this.repository = repository;
 	}
 	
@@ -41,5 +45,9 @@ public class MissionService {
 		
 		mission.setStatus(newStatus);
 		return repository.save(mission);
+	}
+	
+	public void delete(Long id) {
+	    repository.deleteById(id);
 	}
 }

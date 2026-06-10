@@ -39,4 +39,10 @@ public class MissionController {
         Mission updated = service.updateStatus(id, status);
         return ResponseEntity.ok(updated);
     }
+    
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> delete(@PathVariable Long id) {
+        service.delete(id);
+        return ResponseEntity.noContent().build();
+    }
 }

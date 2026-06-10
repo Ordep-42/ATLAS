@@ -4,7 +4,7 @@ import java.time.LocalDateTime;
 
 public class Mission {
 	
-	private long id;
+	private Long id;
 	private String name;
 	private String description;
 	private MissionStatus status;
