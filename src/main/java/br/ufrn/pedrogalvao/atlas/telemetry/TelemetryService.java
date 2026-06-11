@@ -81,7 +81,7 @@ public class TelemetryService {
     	return readings.stream().max((a, b) -> a.getTimestamp().compareTo(b.getTimestamp())).orElseThrow();
     }
     
-    public TelemetryStats getStats(Long missionId, Long sensorId) {
+    public TelemetryStatsResponse getStats(Long missionId, Long sensorId) {
 		List<TelemetryReading> readings = telemetryRepository.findByMissionIdAndSensorId(missionId, sensorId);
     	
     	if (readings.isEmpty()) {
@@ -90,6 +90,6 @@ public class TelemetryService {
     	
     	DoubleSummaryStatistics stats = readings.stream().mapToDouble(TelemetryReading::getValue).summaryStatistics();
     	
-    	return new TelemetryStats(stats.getCount(), stats.getMin(), stats.getMax(), stats.getAverage());
+    	return new TelemetryStatsResponse(stats.getCount(), stats.getMin(), stats.getMax(), stats.getAverage());
     }
 }

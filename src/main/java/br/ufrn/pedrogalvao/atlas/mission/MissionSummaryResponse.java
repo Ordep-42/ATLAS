@@ -2,7 +2,7 @@ package br.ufrn.pedrogalvao.atlas.mission;
 
 import java.time.LocalDateTime;
 
-public class MissionSummary {
+public class MissionSummaryResponse {
 	private Long id;
 	private String name;
 	private MissionStatus status;
@@ -12,7 +12,7 @@ public class MissionSummary {
 	private LocalDateTime startedAt;
 	private LocalDateTime lastTelemetryAt;
 	
-	public MissionSummary(Long id, String name, MissionStatus status, long sensorCount, long telemetryCount,
+	public MissionSummaryResponse(Long id, String name, MissionStatus status, long sensorCount, long telemetryCount,
 			LocalDateTime createdAt, LocalDateTime startedAt, LocalDateTime lastTelemetryAt) {
 		this.id = id;
 		this.name = name;

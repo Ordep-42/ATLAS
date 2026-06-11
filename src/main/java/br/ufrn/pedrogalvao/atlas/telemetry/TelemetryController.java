@@ -44,7 +44,7 @@ public class TelemetryController {
     }
     
     @GetMapping("/{missionId}/{sensorId}/stats")
-    public ResponseEntity<TelemetryStats> stats(@PathVariable Long missionId, @PathVariable Long sensorId) {
+    public ResponseEntity<TelemetryStatsResponse> stats(@PathVariable Long missionId, @PathVariable Long sensorId) {
     	
         return ResponseEntity.ok(service.getStats(missionId, sensorId));
     }

@@ -47,12 +47,12 @@ public class MissionController {
     }
     
     @GetMapping("/{id}/summary")
-    public ResponseEntity<MissionSummary> getSummary(@PathVariable Long id) {
+    public ResponseEntity<MissionSummaryResponse> getSummary(@PathVariable Long id) {
         return ResponseEntity.ok(service.getSummary(id));
     }
     
     @GetMapping("/{id}/latest")
-    public ResponseEntity<List<MissionSensorLatestReading>> getLatestReadings(@PathVariable Long id) {
+    public ResponseEntity<List<MissionLatestReadingResponse>> getLatestReadings(@PathVariable Long id) {
         return ResponseEntity.ok(service.getLatestReadings(id));
     }
 }

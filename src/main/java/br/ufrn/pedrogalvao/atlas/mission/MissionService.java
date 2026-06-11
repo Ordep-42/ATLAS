@@ -90,7 +90,7 @@ public class MissionService {
 		}
 	}
 	
-	public MissionSummary getSummary(Long missionId) {
+	public MissionSummaryResponse getSummary(Long missionId) {
 		Mission mission = repository.findById(missionId)
 				.orElseThrow(() -> new RuntimeException("Missão não encontrada: " + missionId));
 		
@@ -100,19 +100,19 @@ public class MissionService {
 		LocalDateTime lastTelemetryAt = readings.stream().map(TelemetryReading::getTimestamp).max(LocalDateTime::compareTo).orElse(null);
 	    long telemetryCount = readings.size();
 	    
-	    return new MissionSummary(mission.getId(), mission.getName(), mission.getStatus(), sensorCount, telemetryCount, mission.getCreatedAt(), mission.getStartedAt(), lastTelemetryAt);
+	    return new MissionSummaryResponse(mission.getId(), mission.getName(), mission.getStatus(), sensorCount, telemetryCount, mission.getCreatedAt(), mission.getStartedAt(), lastTelemetryAt);
 	}
 	
-	public List<MissionSensorLatestReading> getLatestReadings(Long missionId) {
+	public List<MissionLatestReadingResponse> getLatestReadings(Long missionId) {
 		repository.findById(missionId).orElseThrow(() -> new RuntimeException("Missão não encontrada: " + missionId));
 		List<Sensor> sensors = sensorRepository.findByMissionId(missionId);
 		
-		List<MissionSensorLatestReading> result = new ArrayList<>();
+		List<MissionLatestReadingResponse> result = new ArrayList<>();
 		
 		for (Sensor sensor : sensors) {
 		    List<TelemetryReading> readings = telemetryRepository.findByMissionIdAndSensorId(missionId, sensor.getId());
 		    readings.stream().max(Comparator.comparing(TelemetryReading::getTimestamp)).ifPresent(latest -> result.add(
-                    new MissionSensorLatestReading(sensor.getId(), sensor.getName(), latest.getValue(), latest.getTimestamp())));
+                    new MissionLatestReadingResponse(sensor.getId(), sensor.getName(), latest.getValue(), latest.getTimestamp())));
 		}
 		
 		return result;

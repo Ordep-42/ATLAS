@@ -2,13 +2,13 @@ package br.ufrn.pedrogalvao.atlas.mission;
 
 import java.time.LocalDateTime;
 
-public class MissionSensorLatestReading {
+public class MissionLatestReadingResponse {
 	 private Long sensorId;
     private String sensorName;
     private Double value;
     private LocalDateTime timestamp;
     
-	public MissionSensorLatestReading(Long sensorId, String sensorName, Double value, LocalDateTime timestamp) {
+	public MissionLatestReadingResponse(Long sensorId, String sensorName, Double value, LocalDateTime timestamp) {
 		this.sensorId = sensorId;
 		this.sensorName = sensorName;
 		this.value = value;
