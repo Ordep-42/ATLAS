@@ -4,7 +4,9 @@ import java.util.List;
 
 import org.springframework.stereotype.Service;
 
+import br.ufrn.pedrogalvao.atlas.mission.Mission;
 import br.ufrn.pedrogalvao.atlas.mission.MissionRepository;
+import br.ufrn.pedrogalvao.atlas.mission.MissionStatus;
 import br.ufrn.pedrogalvao.atlas.sensor.Sensor;
 import br.ufrn.pedrogalvao.atlas.sensor.SensorRepository;
 
@@ -27,9 +29,13 @@ public class TelemetryService {
 
     public TelemetryReading create(Long missionId, Long sensorId, Double value) {
 
-        missionRepository.findById(missionId)
+        Mission mission = missionRepository.findById(missionId)
                 .orElseThrow(() -> new RuntimeException("Missão não encontrada:: " + missionId));
-
+        
+        if (mission.getStatus() != MissionStatus.ACTIVE) {
+        	throw new RuntimeException("Não é possível receber telemetria de uma missão inativa.");
+        }
+        
         Sensor sensor = sensorRepository.findById(sensorId)
                 .orElseThrow(() -> new RuntimeException("Sensor não encontrado " + sensorId));
 

@@ -35,6 +35,10 @@ public class MissionService {
 		Mission mission = repository.findById(id)
 				.orElseThrow(() -> new RuntimeException("Missão não encontrada: " + id));
 		
+		if (mission.getStatus() == newStatus) {
+		    return mission;
+		}
+		
 		if (newStatus == MissionStatus.ACTIVE && mission.getStartedAt() == null) {
 			mission.setStartedAt(LocalDateTime.now());
 		}
@@ -43,11 +47,35 @@ public class MissionService {
 			mission.setFinishedAt(LocalDateTime.now());
 		}
 		
+		if (!isValidTransition(mission.getStatus(), newStatus)) {
+			throw new RuntimeException("Transição de status inválida: " + mission.getStatus() + " -> " + newStatus);
+		}
+		
 		mission.setStatus(newStatus);
 		return repository.save(mission);
 	}
 	
 	public void delete(Long id) {
 	    repository.deleteById(id);
+	}
+	
+	private boolean isValidTransition(MissionStatus current, MissionStatus next) {
+		switch (current) {
+		case PLANNED:
+			return next == MissionStatus.ACTIVE || next == MissionStatus.ABORTED;
+			
+		case ACTIVE:
+			return next == MissionStatus.SAFE_MODE || next == MissionStatus.COMPLETED || next == MissionStatus.ABORTED; 
+		
+		case SAFE_MODE:
+			return next == MissionStatus.COMPLETED || next == MissionStatus.COMPLETED || next == MissionStatus.ABORTED;
+			
+		case COMPLETED:
+		case ABORTED:
+			return false;
+			
+		default:
+			return false;
+		}
 	}
 }

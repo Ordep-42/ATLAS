@@ -1,11 +1,12 @@
 package br.ufrn.pedrogalvao.atlas.sensor;
 
 import java.util.List;
-import java.util.Optional;
 
 import org.springframework.stereotype.Service;
 
+import br.ufrn.pedrogalvao.atlas.mission.Mission;
 import br.ufrn.pedrogalvao.atlas.mission.MissionRepository;
+import br.ufrn.pedrogalvao.atlas.mission.MissionStatus;
 
 @Service
 public class SensorService {
@@ -22,9 +23,13 @@ public class SensorService {
     }
 
     public Sensor create(Long missionId, String name, SensorType type, String unit) {
-        missionRepository.findById(missionId)
+        Mission mission = missionRepository.findById(missionId)
                 .orElseThrow(() -> new RuntimeException("Missão não encontrada: " + missionId));
 
+        if (mission.getStatus() != MissionStatus.PLANNED) {
+        	throw new RuntimeException ("Só é possível adicionar sensores em uma missão planejada.");
+        }
+        
         Sensor sensor = new Sensor();
 
         sensor.setMissionId(missionId);
