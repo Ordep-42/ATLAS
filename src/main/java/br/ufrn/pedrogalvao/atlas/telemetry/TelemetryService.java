@@ -1,5 +1,6 @@
 package br.ufrn.pedrogalvao.atlas.telemetry;
 
+import java.util.DoubleSummaryStatistics;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
@@ -32,7 +33,7 @@ public class TelemetryService {
         Mission mission = missionRepository.findById(missionId)
                 .orElseThrow(() -> new RuntimeException("Missão não encontrada:: " + missionId));
         
-        if (mission.getStatus() != MissionStatus.ACTIVE) {
+        if (mission.getStatus() == MissionStatus.PLANNED || mission.getStatus() == MissionStatus.COMPLETED || mission.getStatus() == MissionStatus.ABORTED) {
         	throw new RuntimeException("Não é possível receber telemetria de uma missão inativa.");
         }
         
@@ -68,5 +69,27 @@ public class TelemetryService {
                 .orElseThrow(() -> new RuntimeException("Sensor não encontrado: " + sensorId));
 
         return telemetryRepository.findByMissionIdAndSensorId(missionId, sensorId);
+    }
+    
+    public TelemetryReading getLatestReading(Long missionId, Long sensorId) {
+    	List<TelemetryReading> readings = telemetryRepository.findByMissionIdAndSensorId(missionId, sensorId);
+    	
+    	if (readings.isEmpty()) {
+    		throw new RuntimeException("Nenhuma leitura de telemetria encontrada");
+    	}	
+    	
+    	return readings.stream().max((a, b) -> a.getTimestamp().compareTo(b.getTimestamp())).orElseThrow();
+    }
+    
+    public TelemetryStats getStats(Long missionId, Long sensorId) {
+		List<TelemetryReading> readings = telemetryRepository.findByMissionIdAndSensorId(missionId, sensorId);
+    	
+    	if (readings.isEmpty()) {
+    		throw new RuntimeException("Nenhuma leitura de telemetria encontrada");
+    	}
+    	
+    	DoubleSummaryStatistics stats = readings.stream().mapToDouble(TelemetryReading::getValue).summaryStatistics();
+    	
+    	return new TelemetryStats(stats.getCount(), stats.getMin(), stats.getMax(), stats.getAverage());
     }
 }

@@ -37,4 +37,15 @@ public class TelemetryController {
     public ResponseEntity<List<TelemetryReading>> listByMissionAndSensor(@PathVariable Long missionId, @PathVariable Long sensorId) {
         return ResponseEntity.ok(service.listByMissionAndSensor(missionId, sensorId));
     }
+    
+    @GetMapping("/{missionId}/{sensorId}/latest")
+    public ResponseEntity<TelemetryReading> latest(@PathVariable Long missionId, @PathVariable Long sensorId) {
+        return ResponseEntity.ok(service.getLatestReading(missionId, sensorId));
+    }
+    
+    @GetMapping("/{missionId}/{sensorId}/stats")
+    public ResponseEntity<TelemetryStats> stats(@PathVariable Long missionId, @PathVariable Long sensorId) {
+    	
+        return ResponseEntity.ok(service.getStats(missionId, sensorId));
+    }
 }

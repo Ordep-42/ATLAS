@@ -45,4 +45,9 @@ public class MissionController {
         service.delete(id);
         return ResponseEntity.noContent().build();
     }
+    
+    @GetMapping("/{id}/summary")
+    public ResponseEntity<MissionSummary> getSummary(@PathVariable Long id) {
+        return ResponseEntity.ok(service.getSummary(id));
+    }
 }
