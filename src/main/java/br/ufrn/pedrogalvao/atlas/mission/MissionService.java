@@ -33,7 +33,7 @@ public class MissionService {
 	
 	public Mission updateStatus(Long id, MissionStatus newStatus) {
 		Mission mission = repository.findById(id)
-				.orElseThrow(() -> new RuntimeException("Missão Não encontrada: " + id));
+				.orElseThrow(() -> new RuntimeException("Missão não encontrada: " + id));
 		
 		if (newStatus == MissionStatus.ACTIVE && mission.getStartedAt() == null) {
 			mission.setStartedAt(LocalDateTime.now());

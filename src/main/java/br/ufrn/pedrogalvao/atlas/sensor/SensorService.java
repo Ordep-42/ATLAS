@@ -23,7 +23,7 @@ public class SensorService {
 
     public Sensor create(Long missionId, String name, SensorType type, String unit) {
         missionRepository.findById(missionId)
-                .orElseThrow(() -> new RuntimeException("Mission not found: " + missionId));
+                .orElseThrow(() -> new RuntimeException("Missão não encontrada: " + missionId));
 
         Sensor sensor = new Sensor();
 
@@ -37,19 +37,19 @@ public class SensorService {
 
     public List<Sensor> listByMission(Long missionId) {
         missionRepository.findById(missionId)
-                .orElseThrow(() -> new RuntimeException("Mission not found: " + missionId));
+                .orElseThrow(() -> new RuntimeException("Missão não encontrada: " + missionId));
 
         return sensorRepository.findByMissionId(missionId);
     }
 
     public Sensor findById(Long sensorId) {
         return sensorRepository.findById(sensorId)
-                .orElseThrow(() -> new RuntimeException("Sensor not found: " + sensorId));
+                .orElseThrow(() -> new RuntimeException("Sensor não encontrado " + sensorId));
     }
 
     public void delete(Long sensorId) {
     	sensorRepository.findById(sensorId)
-        	.orElseThrow(() -> new RuntimeException("Sensor not found: " + sensorId));
+        	.orElseThrow(() -> new RuntimeException("Sensor não encontrado: " + sensorId));
     	sensorRepository.deleteById(sensorId);
     }
 }
