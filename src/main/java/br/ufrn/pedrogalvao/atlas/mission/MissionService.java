@@ -7,8 +7,8 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.stereotype.Service;
-import org.springframework.web.server.ResponseStatusException;
 
+import br.ufrn.pedrogalvao.atlas.exception.MissionNotFoundException;
 import br.ufrn.pedrogalvao.atlas.sensor.Sensor;
 import br.ufrn.pedrogalvao.atlas.sensor.SensorRepository;
 import br.ufrn.pedrogalvao.atlas.telemetry.TelemetryReading;
@@ -44,7 +44,7 @@ public class MissionService {
 	
 	public Mission updateStatus(Long id, MissionStatus newStatus) {
 		Mission mission = repository.findById(id)
-				.orElseThrow(() -> new RuntimeException("Missão não encontrada: " + id));
+				.orElseThrow(() -> new MissionNotFoundException(id));
 		
 		if (mission.getStatus() == newStatus) {
 		    return mission;
@@ -92,7 +92,7 @@ public class MissionService {
 	
 	public MissionSummaryResponse getSummary(Long missionId) {
 		Mission mission = repository.findById(missionId)
-				.orElseThrow(() -> new RuntimeException("Missão não encontrada: " + missionId));
+				.orElseThrow(() -> new MissionNotFoundException(missionId));
 		
 		long sensorCount = sensorRepository.findByMissionId(missionId).size();
 
@@ -104,7 +104,7 @@ public class MissionService {
 	}
 	
 	public List<MissionLatestReadingResponse> getLatestReadings(Long missionId) {
-		repository.findById(missionId).orElseThrow(() -> new RuntimeException("Missão não encontrada: " + missionId));
+		repository.findById(missionId).orElseThrow(() -> new MissionNotFoundException(missionId));
 		List<Sensor> sensors = sensorRepository.findByMissionId(missionId);
 		
 		List<MissionLatestReadingResponse> result = new ArrayList<>();

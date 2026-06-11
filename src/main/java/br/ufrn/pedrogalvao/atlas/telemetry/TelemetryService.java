@@ -5,6 +5,9 @@ import java.util.List;
 
 import org.springframework.stereotype.Service;
 
+import br.ufrn.pedrogalvao.atlas.exception.MissionNotFoundException;
+import br.ufrn.pedrogalvao.atlas.exception.SensorNotFoundException;
+import br.ufrn.pedrogalvao.atlas.exception.TelemetryNotFoundException;
 import br.ufrn.pedrogalvao.atlas.mission.Mission;
 import br.ufrn.pedrogalvao.atlas.mission.MissionRepository;
 import br.ufrn.pedrogalvao.atlas.mission.MissionStatus;
@@ -31,14 +34,14 @@ public class TelemetryService {
     public TelemetryReading create(Long missionId, Long sensorId, Double value) {
 
         Mission mission = missionRepository.findById(missionId)
-                .orElseThrow(() -> new RuntimeException("Missão não encontrada:: " + missionId));
+                .orElseThrow(() -> new MissionNotFoundException(missionId));
         
         if (mission.getStatus() == MissionStatus.PLANNED || mission.getStatus() == MissionStatus.COMPLETED || mission.getStatus() == MissionStatus.ABORTED) {
         	throw new RuntimeException("Não é possível receber telemetria de uma missão inativa.");
         }
         
         Sensor sensor = sensorRepository.findById(sensorId)
-                .orElseThrow(() -> new RuntimeException("Sensor não encontrado " + sensorId));
+                .orElseThrow(() -> new SensorNotFoundException(sensorId));
 
         if (!sensor.getMissionId().equals(missionId)) {
             throw new RuntimeException("Sensor não pertence a missão");
@@ -56,17 +59,17 @@ public class TelemetryService {
     public List<TelemetryReading> listByMission(Long missionId) {
 
         missionRepository.findById(missionId)
-                .orElseThrow(() -> new RuntimeException("Missão não encontrada:: " + missionId));
+                .orElseThrow(() -> new MissionNotFoundException(missionId));
 
         return telemetryRepository.findByMissionId(missionId);
     }
 
     public List<TelemetryReading> listByMissionAndSensor(Long missionId, Long sensorId) {
         missionRepository.findById(missionId)
-                .orElseThrow(() -> new RuntimeException("Missão não encontrada:: " + missionId));
+                .orElseThrow(() -> new MissionNotFoundException(missionId));
 
         sensorRepository.findById(sensorId)
-                .orElseThrow(() -> new RuntimeException("Sensor não encontrado: " + sensorId));
+                .orElseThrow(() -> new SensorNotFoundException(sensorId));
 
         return telemetryRepository.findByMissionIdAndSensorId(missionId, sensorId);
     }
@@ -75,7 +78,7 @@ public class TelemetryService {
     	List<TelemetryReading> readings = telemetryRepository.findByMissionIdAndSensorId(missionId, sensorId);
     	
     	if (readings.isEmpty()) {
-    		throw new RuntimeException("Nenhuma leitura de telemetria encontrada");
+    		throw new TelemetryNotFoundException();
     	}	
     	
     	return readings.stream().max((a, b) -> a.getTimestamp().compareTo(b.getTimestamp())).orElseThrow();
@@ -85,7 +88,7 @@ public class TelemetryService {
 		List<TelemetryReading> readings = telemetryRepository.findByMissionIdAndSensorId(missionId, sensorId);
     	
     	if (readings.isEmpty()) {
-    		throw new RuntimeException("Nenhuma leitura de telemetria encontrada");
+    		throw new TelemetryNotFoundException();
     	}
     	
     	DoubleSummaryStatistics stats = readings.stream().mapToDouble(TelemetryReading::getValue).summaryStatistics();

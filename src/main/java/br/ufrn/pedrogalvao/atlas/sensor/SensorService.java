@@ -4,6 +4,8 @@ import java.util.List;
 
 import org.springframework.stereotype.Service;
 
+import br.ufrn.pedrogalvao.atlas.exception.MissionNotFoundException;
+import br.ufrn.pedrogalvao.atlas.exception.SensorNotFoundException;
 import br.ufrn.pedrogalvao.atlas.mission.Mission;
 import br.ufrn.pedrogalvao.atlas.mission.MissionRepository;
 import br.ufrn.pedrogalvao.atlas.mission.MissionStatus;
@@ -24,7 +26,7 @@ public class SensorService {
 
     public Sensor create(Long missionId, String name, SensorType type, String unit) {
         Mission mission = missionRepository.findById(missionId)
-                .orElseThrow(() -> new RuntimeException("Missão não encontrada: " + missionId));
+                .orElseThrow(() -> new MissionNotFoundException(missionId));
 
         if (mission.getStatus() != MissionStatus.PLANNED) {
         	throw new RuntimeException ("Só é possível adicionar sensores em uma missão planejada.");
@@ -42,19 +44,19 @@ public class SensorService {
 
     public List<Sensor> listByMission(Long missionId) {
         missionRepository.findById(missionId)
-                .orElseThrow(() -> new RuntimeException("Missão não encontrada: " + missionId));
+                .orElseThrow(() -> new MissionNotFoundException(missionId));
 
         return sensorRepository.findByMissionId(missionId);
     }
 
     public Sensor findById(Long sensorId) {
         return sensorRepository.findById(sensorId)
-                .orElseThrow(() -> new RuntimeException("Sensor não encontrado " + sensorId));
+                .orElseThrow(() -> new SensorNotFoundException(sensorId));
     }
 
     public void delete(Long sensorId) {
     	sensorRepository.findById(sensorId)
-        	.orElseThrow(() -> new RuntimeException("Sensor não encontrado: " + sensorId));
+        	.orElseThrow(() -> new SensorNotFoundException(sensorId));
     	sensorRepository.deleteById(sensorId);
     }
 }
