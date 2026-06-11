@@ -1,12 +1,15 @@
 package br.ufrn.pedrogalvao.atlas.mission;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
+import br.ufrn.pedrogalvao.atlas.sensor.Sensor;
 import br.ufrn.pedrogalvao.atlas.sensor.SensorRepository;
 import br.ufrn.pedrogalvao.atlas.telemetry.TelemetryReading;
 import br.ufrn.pedrogalvao.atlas.telemetry.TelemetryRepository;
@@ -98,5 +101,20 @@ public class MissionService {
 	    long telemetryCount = readings.size();
 	    
 	    return new MissionSummary(mission.getId(), mission.getName(), mission.getStatus(), sensorCount, telemetryCount, mission.getCreatedAt(), mission.getStartedAt(), lastTelemetryAt);
+	}
+	
+	public List<MissionSensorLatestReading> getLatestReadings(Long missionId) {
+		repository.findById(missionId).orElseThrow(() -> new RuntimeException("Missão não encontrada: " + missionId));
+		List<Sensor> sensors = sensorRepository.findByMissionId(missionId);
+		
+		List<MissionSensorLatestReading> result = new ArrayList<>();
+		
+		for (Sensor sensor : sensors) {
+		    List<TelemetryReading> readings = telemetryRepository.findByMissionIdAndSensorId(missionId, sensor.getId());
+		    readings.stream().max(Comparator.comparing(TelemetryReading::getTimestamp)).ifPresent(latest -> result.add(
+                    new MissionSensorLatestReading(sensor.getId(), sensor.getName(), latest.getValue(), latest.getTimestamp())));
+		}
+		
+		return result;
 	}
 }
