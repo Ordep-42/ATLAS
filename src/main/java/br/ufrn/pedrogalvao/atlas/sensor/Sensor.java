@@ -1,10 +1,28 @@
 package br.ufrn.pedrogalvao.atlas.sensor;
 
+import jakarta.persistence.*;
+
+@Entity
+@Table(
+	name = "sensors",
+    indexes = {
+        @Index(
+            name = "idx_sensor_mission",
+            columnList = "missionId"
+        )
+    }
+)
 public class Sensor {
 
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
+	
+	@Column(nullable = false)
 	private Long missionId;
 	private String name;
+	
+	@Enumerated(EnumType.STRING)
 	private SensorType type;
 	private String unit;
 	

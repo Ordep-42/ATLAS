@@ -43,7 +43,7 @@ public class SensorService {
         return sensorRepository.save(sensor);
     }
 
-    public List<Sensor> listByMission(Long missionId) {
+    public List<Sensor> findByMission(Long missionId) {
         missionRepository.findById(missionId)
                 .orElseThrow(() -> new MissionNotFoundException(missionId));
 

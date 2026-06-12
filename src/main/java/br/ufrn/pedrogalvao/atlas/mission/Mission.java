@@ -17,6 +17,7 @@ public class Mission {
 	
 	@Enumerated(EnumType.STRING)
 	private MissionStatus status;
+	
 	private LocalDateTime createdAt;
 	private LocalDateTime startedAt;
 	private LocalDateTime finishedAt;

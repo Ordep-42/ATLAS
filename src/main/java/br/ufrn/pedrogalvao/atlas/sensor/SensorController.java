@@ -47,7 +47,7 @@ public class SensorController {
     public ResponseEntity<List<Sensor>> listByMission(
             @PathVariable Long missionId) {
 
-        return ResponseEntity.ok(service.listByMission(missionId));
+        return ResponseEntity.ok(service.findByMission(missionId));
     }
     
     @Operation(
