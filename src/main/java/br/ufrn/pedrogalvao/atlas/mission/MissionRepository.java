@@ -1,11 +1,7 @@
 package br.ufrn.pedrogalvao.atlas.mission;
 
-import java.util.List;
-import java.util.Optional;
+import org.springframework.data.jpa.repository.JpaRepository;
 
-public interface MissionRepository {
-	Mission save(Mission mission);
-	Optional<Mission> findById(Long id);
-	List<Mission> listAll();
-	void deleteById(Long id);
+public interface MissionRepository extends JpaRepository<Mission, Long> {
+
 }

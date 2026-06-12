@@ -2,11 +2,20 @@ package br.ufrn.pedrogalvao.atlas.mission;
 
 import java.time.LocalDateTime;
 
+import jakarta.persistence.*;
+
+@Entity
+@Table(name = "missions")
 public class Mission {
 	
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
+	
 	private String name;
 	private String description;
+	
+	@Enumerated(EnumType.STRING)
 	private MissionStatus status;
 	private LocalDateTime createdAt;
 	private LocalDateTime startedAt;

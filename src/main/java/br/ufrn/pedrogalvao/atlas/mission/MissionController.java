@@ -38,8 +38,8 @@ public class MissionController {
 	    description = "Retorna todas as missões cadastradas."
 	)
 	@GetMapping
-	public ResponseEntity<List<Mission>> listAll() {
-		return ResponseEntity.ok(service.listAll());
+	public ResponseEntity<List<Mission>> findAll() {
+		return ResponseEntity.ok(service.findAll());
 	}
 
 	@Operation(

@@ -35,8 +35,8 @@ public class MissionService {
 		return repository.save(mission);
 	}
 	
-	public List<Mission> listAll() {
-		return repository.listAll();
+	public List<Mission> findAll() {
+		return repository.findAll();
 	}
 	
 	public Optional<Mission> findById(Long id) {
