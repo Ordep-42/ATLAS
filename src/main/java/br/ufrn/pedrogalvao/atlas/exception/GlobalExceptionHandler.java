@@ -22,4 +22,15 @@ public class GlobalExceptionHandler {
 
 	    return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
 	}
+	
+	@ExceptionHandler(BusinessException.class)
+	public ResponseEntity<ApiError> handleBusinessException(BusinessException ex) {
+		ApiError error = new ApiError(
+				LocalDateTime.now(),
+				HttpStatus.CONFLICT.value(),
+				HttpStatus.CONFLICT.getReasonPhrase(),
+				ex.getMessage());
+		
+		return ResponseEntity.status(HttpStatus.CONFLICT).body(error);
+	}
 }

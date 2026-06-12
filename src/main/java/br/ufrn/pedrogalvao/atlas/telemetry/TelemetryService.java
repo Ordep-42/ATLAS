@@ -6,7 +6,9 @@ import java.util.List;
 import org.springframework.stereotype.Service;
 
 import br.ufrn.pedrogalvao.atlas.exception.MissionNotFoundException;
+import br.ufrn.pedrogalvao.atlas.exception.SensorMissionMismatchException;
 import br.ufrn.pedrogalvao.atlas.exception.SensorNotFoundException;
+import br.ufrn.pedrogalvao.atlas.exception.TelemetryNotAllowedException;
 import br.ufrn.pedrogalvao.atlas.exception.TelemetryNotFoundException;
 import br.ufrn.pedrogalvao.atlas.mission.Mission;
 import br.ufrn.pedrogalvao.atlas.mission.MissionRepository;
@@ -37,14 +39,14 @@ public class TelemetryService {
                 .orElseThrow(() -> new MissionNotFoundException(missionId));
         
         if (mission.getStatus() == MissionStatus.PLANNED || mission.getStatus() == MissionStatus.COMPLETED || mission.getStatus() == MissionStatus.ABORTED) {
-        	throw new RuntimeException("Não é possível receber telemetria de uma missão inativa.");
+        	throw new TelemetryNotAllowedException();
         }
         
         Sensor sensor = sensorRepository.findById(sensorId)
                 .orElseThrow(() -> new SensorNotFoundException(sensorId));
 
         if (!sensor.getMissionId().equals(missionId)) {
-            throw new RuntimeException("Sensor não pertence a missão");
+            throw new SensorMissionMismatchException(missionId, sensorId);
         }
 
         TelemetryReading reading = new TelemetryReading();
@@ -78,17 +80,27 @@ public class TelemetryService {
     	List<TelemetryReading> readings = telemetryRepository.findByMissionIdAndSensorId(missionId, sensorId);
     	
     	if (readings.isEmpty()) {
-    		throw new TelemetryNotFoundException();
+    		throw new TelemetryNotFoundException(missionId, sensorId);
     	}	
     	
     	return readings.stream().max((a, b) -> a.getTimestamp().compareTo(b.getTimestamp())).orElseThrow();
     }
     
     public TelemetryStatsResponse getStats(Long missionId, Long sensorId) {
-		List<TelemetryReading> readings = telemetryRepository.findByMissionIdAndSensorId(missionId, sensorId);
+    	missionRepository.findById(missionId)
+    	.orElseThrow(() -> new MissionNotFoundException(missionId));
     	
+    	Sensor sensor = sensorRepository.findById(sensorId)
+    			.orElseThrow(() -> new SensorNotFoundException(sensorId));
+    	
+    	if (!sensor.getMissionId().equals(missionId)) {
+    		throw new SensorMissionMismatchException(missionId, sensorId);
+    	}
+    	
+		List<TelemetryReading> readings = telemetryRepository.findByMissionIdAndSensorId(missionId, sensorId);    	
+		
     	if (readings.isEmpty()) {
-    		throw new TelemetryNotFoundException();
+    		throw new TelemetryNotFoundException(missionId, sensorId);
     	}
     	
     	DoubleSummaryStatistics stats = readings.stream().mapToDouble(TelemetryReading::getValue).summaryStatistics();

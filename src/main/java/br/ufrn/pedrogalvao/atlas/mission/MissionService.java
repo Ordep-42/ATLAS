@@ -8,6 +8,7 @@ import java.util.Optional;
 
 import org.springframework.stereotype.Service;
 
+import br.ufrn.pedrogalvao.atlas.exception.InvalidTransitionException;
 import br.ufrn.pedrogalvao.atlas.exception.MissionNotFoundException;
 import br.ufrn.pedrogalvao.atlas.sensor.Sensor;
 import br.ufrn.pedrogalvao.atlas.sensor.SensorRepository;
@@ -59,7 +60,7 @@ public class MissionService {
 		}
 		
 		if (!isValidTransition(mission.getStatus(), newStatus)) {
-			throw new RuntimeException("Transição de status inválida: " + mission.getStatus() + " -> " + newStatus);
+			throw new InvalidTransitionException(mission.getStatus(), newStatus);
 		}
 		
 		mission.setStatus(newStatus);

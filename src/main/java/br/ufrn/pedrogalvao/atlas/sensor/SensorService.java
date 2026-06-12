@@ -5,6 +5,7 @@ import java.util.List;
 import org.springframework.stereotype.Service;
 
 import br.ufrn.pedrogalvao.atlas.exception.MissionNotFoundException;
+import br.ufrn.pedrogalvao.atlas.exception.SensorCreationNotAllowedException;
 import br.ufrn.pedrogalvao.atlas.exception.SensorNotFoundException;
 import br.ufrn.pedrogalvao.atlas.mission.Mission;
 import br.ufrn.pedrogalvao.atlas.mission.MissionRepository;
@@ -29,7 +30,7 @@ public class SensorService {
                 .orElseThrow(() -> new MissionNotFoundException(missionId));
 
         if (mission.getStatus() != MissionStatus.PLANNED) {
-        	throw new RuntimeException ("Só é possível adicionar sensores em uma missão planejada.");
+        	throw new SensorCreationNotAllowedException();
         }
         
         Sensor sensor = new Sensor();
@@ -56,7 +57,7 @@ public class SensorService {
 
     public void delete(Long sensorId) {
     	sensorRepository.findById(sensorId)
-        	.orElseThrow(() -> new SensorNotFoundException(sensorId));
+        		.orElseThrow(() -> new SensorNotFoundException(sensorId));
     	sensorRepository.deleteById(sensorId);
     }
 }
