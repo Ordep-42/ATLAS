@@ -7,8 +7,10 @@ import java.util.List;
 import java.util.Optional;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import br.ufrn.pedrogalvao.atlas.exception.InvalidTransitionException;
+import br.ufrn.pedrogalvao.atlas.exception.MissionDeletionNotAllowedException;
 import br.ufrn.pedrogalvao.atlas.exception.MissionNotFoundException;
 import br.ufrn.pedrogalvao.atlas.sensor.Sensor;
 import br.ufrn.pedrogalvao.atlas.sensor.SensorRepository;
@@ -67,7 +69,17 @@ public class MissionService {
 		return repository.save(mission);
 	}
 	
+	@Transactional
 	public void delete(Long id) {
+		Mission mission = repository.findById(id)
+				.orElseThrow(() -> new MissionNotFoundException(id));
+		
+		if (mission.getStatus() == MissionStatus.ACTIVE || mission.getStatus() == MissionStatus.SAFE_MODE) {
+			throw new MissionDeletionNotAllowedException(mission.getStatus());
+		}
+		
+		telemetryRepository.deleteByMissionId(id);
+		sensorRepository.deleteByMissionId(id);
 	    repository.deleteById(id);
 	}
 	
@@ -80,7 +92,7 @@ public class MissionService {
 			return next == MissionStatus.SAFE_MODE || next == MissionStatus.COMPLETED || next == MissionStatus.ABORTED; 
 		
 		case SAFE_MODE:
-			return next == MissionStatus.COMPLETED || next == MissionStatus.COMPLETED || next == MissionStatus.ABORTED;
+			return next == MissionStatus.ACTIVE || next == MissionStatus.COMPLETED || next == MissionStatus.ABORTED;
 			
 		case COMPLETED:
 		case ABORTED:
@@ -95,11 +107,11 @@ public class MissionService {
 		Mission mission = repository.findById(missionId)
 				.orElseThrow(() -> new MissionNotFoundException(missionId));
 		
-		long sensorCount = sensorRepository.findByMissionId(missionId).size();
+		long sensorCount = sensorRepository.countByMissionId(missionId);
 
-		List<TelemetryReading> readings = telemetryRepository.findByMissionId(missionId);
-		LocalDateTime lastTelemetryAt = readings.stream().map(TelemetryReading::getTimestamp).max(LocalDateTime::compareTo).orElse(null);
-	    long telemetryCount = readings.size();
+		LocalDateTime lastTelemetryAt = telemetryRepository.findFirstByMissionIdOrderByReceivedAtDesc(missionId)
+				.map(TelemetryReading::getReceivedAt).orElse(null);
+	    long telemetryCount = telemetryRepository.countByMissionId(missionId);
 	    
 	    return new MissionSummaryResponse(mission.getId(), mission.getName(), mission.getStatus(), sensorCount, telemetryCount, mission.getCreatedAt(), mission.getStartedAt(), lastTelemetryAt);
 	}
@@ -112,8 +124,8 @@ public class MissionService {
 		
 		for (Sensor sensor : sensors) {
 		    List<TelemetryReading> readings = telemetryRepository.findByMissionIdAndSensorId(missionId, sensor.getId());
-		    readings.stream().max(Comparator.comparing(TelemetryReading::getTimestamp)).ifPresent(latest -> result.add(
-                    new MissionLatestReadingResponse(sensor.getId(), sensor.getName(), latest.getValue(), latest.getTimestamp())));
+		    readings.stream().max(Comparator.comparing(TelemetryReading::getReceivedAt)).ifPresent(latest -> result.add(
+                    new MissionLatestReadingResponse(sensor.getId(), sensor.getName(), latest.getReadingValue(), latest.getReceivedAt())));
 		}
 		
 		return result;

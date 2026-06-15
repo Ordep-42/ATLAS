@@ -5,5 +5,8 @@ import java.util.List;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface SensorRepository extends JpaRepository<Sensor, Long> {
-	public List<Sensor> findByMissionId(Long missionId);
+	List<Sensor> findByMissionId(Long missionId);
+	long countByMissionId(Long missionId);
+	
+	long deleteByMissionId(Long missionId);
 }

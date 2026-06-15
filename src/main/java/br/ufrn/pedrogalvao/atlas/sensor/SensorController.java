@@ -72,7 +72,7 @@ public class SensorController {
             @PathVariable Long missionId,
             @PathVariable Long sensorId) {
 
-        service.delete(sensorId);
+        service.delete(missionId, sensorId);
 
         return ResponseEntity.noContent().build();
     }

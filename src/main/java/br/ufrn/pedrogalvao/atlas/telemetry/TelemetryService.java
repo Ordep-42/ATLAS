@@ -33,6 +33,20 @@ public class TelemetryService {
         this.sensorRepository = sensorRepository;
     }
 
+    private Sensor validateMissionAndSensor(Long missionId, Long sensorId) {
+    	missionRepository.findById(missionId)
+    	.orElseThrow(() -> new MissionNotFoundException(missionId));
+    	
+    	Sensor sensor = sensorRepository.findById(sensorId)
+    			.orElseThrow(() -> new SensorNotFoundException(sensorId));
+    	
+    	if (!sensor.getMissionId().equals(missionId)) {
+    		throw new SensorMissionMismatchException(missionId, sensorId);
+    	}
+    	
+    	return sensor;
+    }
+    
     public TelemetryReading create(Long missionId, Long sensorId, Double value) {
 
         Mission mission = missionRepository.findById(missionId)
@@ -42,18 +56,13 @@ public class TelemetryService {
         	throw new TelemetryNotAllowedException();
         }
         
-        Sensor sensor = sensorRepository.findById(sensorId)
-                .orElseThrow(() -> new SensorNotFoundException(sensorId));
-
-        if (!sensor.getMissionId().equals(missionId)) {
-            throw new SensorMissionMismatchException(missionId, sensorId);
-        }
+        validateMissionAndSensor(missionId, sensorId);
 
         TelemetryReading reading = new TelemetryReading();
 
         reading.setMissionId(missionId);
         reading.setSensorId(sensorId);
-        reading.setValue(value);
+        reading.setReadingValue(value);
 
         return telemetryRepository.save(reading);
     }
@@ -67,43 +76,30 @@ public class TelemetryService {
     }
 
     public List<TelemetryReading> listByMissionAndSensor(Long missionId, Long sensorId) {
-        missionRepository.findById(missionId)
-                .orElseThrow(() -> new MissionNotFoundException(missionId));
-
-        sensorRepository.findById(sensorId)
-                .orElseThrow(() -> new SensorNotFoundException(sensorId));
-
+    	validateMissionAndSensor(missionId, sensorId);
+        
         return telemetryRepository.findByMissionIdAndSensorId(missionId, sensorId);
     }
     
     public TelemetryReading getLatestReading(Long missionId, Long sensorId) {
-    	List<TelemetryReading> readings = telemetryRepository.findByMissionIdAndSensorId(missionId, sensorId);
-    	
-    	if (readings.isEmpty()) {
-    		throw new TelemetryNotFoundException(missionId, sensorId);
-    	}	
-    	
-    	return readings.stream().max((a, b) -> a.getTimestamp().compareTo(b.getTimestamp())).orElseThrow();
+    	return telemetryRepository
+                .findFirstByMissionIdAndSensorIdOrderByReceivedAtDesc(
+                        missionId,
+                        sensorId)
+                .orElseThrow(() ->
+                        new TelemetryNotFoundException(
+                                missionId,
+                                sensorId));
     }
     
     public TelemetryStatsResponse getStats(Long missionId, Long sensorId) {
-    	missionRepository.findById(missionId)
-    	.orElseThrow(() -> new MissionNotFoundException(missionId));
-    	
-    	Sensor sensor = sensorRepository.findById(sensorId)
-    			.orElseThrow(() -> new SensorNotFoundException(sensorId));
-    	
-    	if (!sensor.getMissionId().equals(missionId)) {
-    		throw new SensorMissionMismatchException(missionId, sensorId);
-    	}
-    	
-		List<TelemetryReading> readings = telemetryRepository.findByMissionIdAndSensorId(missionId, sensorId);    	
+		List<TelemetryReading> readings = listByMissionAndSensor(missionId, sensorId);    	
 		
     	if (readings.isEmpty()) {
     		throw new TelemetryNotFoundException(missionId, sensorId);
     	}
     	
-    	DoubleSummaryStatistics stats = readings.stream().mapToDouble(TelemetryReading::getValue).summaryStatistics();
+    	DoubleSummaryStatistics stats = readings.stream().mapToDouble(TelemetryReading::getReadingValue).summaryStatistics();
     	
     	return new TelemetryStatsResponse(stats.getCount(), stats.getMin(), stats.getMax(), stats.getAverage());
     }

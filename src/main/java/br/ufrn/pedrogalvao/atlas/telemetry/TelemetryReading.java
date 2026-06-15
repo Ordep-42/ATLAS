@@ -2,16 +2,45 @@ package br.ufrn.pedrogalvao.atlas.telemetry;
 
 import java.time.LocalDateTime;
 
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Index;
+import jakarta.persistence.Table;
+
+@Entity
+@Table(
+	name = "telemetry_readings",
+    indexes = {
+        @Index(
+            name = "idx_telemetry_mission",
+            columnList = "missionId"
+        ),
+        @Index(
+            name = "idx_telemetry_sensor",
+            columnList = "sensorId"
+        )
+    }
+)
 public class TelemetryReading {
 
-    private Long id;
+	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
+	private Long id;
+	
+	@Column(nullable = false)
     private Long missionId;
+	
+	@Column(nullable = false)
     private Long sensorId;
-    private Double value;
-    private LocalDateTime timestamp;
+	
+    private Double readingValue;
+    private LocalDateTime receivedAt;
 
     public TelemetryReading() {
-        this.timestamp = LocalDateTime.now();
+        this.receivedAt = LocalDateTime.now();
     }
 
     public Long getId() {
@@ -38,19 +67,19 @@ public class TelemetryReading {
         this.sensorId = sensorId;
     }
 
-    public Double getValue() {
-        return value;
+    public Double getReadingValue() {
+        return readingValue;
     }
 
-    public void setValue(Double value) {
-        this.value = value;
+    public void setReadingValue(Double value) {
+        this.readingValue = value;
     }
 
-    public LocalDateTime getTimestamp() {
-        return timestamp;
+    public LocalDateTime getReceivedAt() {
+        return receivedAt;
     }
 
-    public void setTimestamp(LocalDateTime timestamp) {
-        this.timestamp = timestamp;
+    public void setReceivedAt(LocalDateTime timestamp) {
+        this.receivedAt = timestamp;
     }
 }
