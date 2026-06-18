@@ -1,22 +1,22 @@
 package br.ufrn.pedrogalvao.atlas.exception;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 public class ApiError {
 
-    private LocalDateTime timestamp;
+    private Instant timestamp;
     private int status;
     private String error;
     private String message;
 
-    public ApiError(LocalDateTime timestamp, int status, String error, String message) {
+    public ApiError(Instant timestamp, int status, String error, String message) {
         this.timestamp = timestamp;
         this.status = status;
         this.error = error;
         this.message = message;
     }
 
-    public LocalDateTime getTimestamp() {
+    public Instant getTimestamp() {
         return timestamp;
     }
 

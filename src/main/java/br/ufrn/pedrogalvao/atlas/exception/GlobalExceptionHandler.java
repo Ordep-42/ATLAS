@@ -1,9 +1,11 @@
 package br.ufrn.pedrogalvao.atlas.exception;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
+import java.util.List;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
@@ -15,7 +17,7 @@ public class GlobalExceptionHandler {
 	        ResourceNotFoundException ex) {
 
 	    ApiError error = new ApiError(
-	            LocalDateTime.now(),
+	    		Instant.now(),
 	            HttpStatus.NOT_FOUND.value(),
 	            HttpStatus.NOT_FOUND.getReasonPhrase(),
 	            ex.getMessage());
@@ -26,11 +28,29 @@ public class GlobalExceptionHandler {
 	@ExceptionHandler(BusinessException.class)
 	public ResponseEntity<ApiError> handleBusinessException(BusinessException ex) {
 		ApiError error = new ApiError(
-				LocalDateTime.now(),
+				Instant.now(),
 				HttpStatus.CONFLICT.value(),
 				HttpStatus.CONFLICT.getReasonPhrase(),
 				ex.getMessage());
 		
 		return ResponseEntity.status(HttpStatus.CONFLICT).body(error);
+	}
+	
+	@ExceptionHandler(MethodArgumentNotValidException.class)
+	public ResponseEntity<List<String>> handleValidation(
+	        MethodArgumentNotValidException ex) {
+
+		List<String> errors =
+	            ex.getBindingResult()
+	              .getFieldErrors()
+	              .stream()
+	              .map(error ->
+	                      error.getField()
+	                      + ": "
+	                      + error.getDefaultMessage())
+	              .toList();
+
+	    return ResponseEntity.badRequest()
+	            .body(errors);
 	}
 }
