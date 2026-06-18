@@ -1,5 +1,6 @@
 package br.ufrn.pedrogalvao.atlas.telemetry;
 
+import java.time.Instant;
 import java.util.DoubleSummaryStatistics;
 import java.util.List;
 
@@ -22,15 +23,22 @@ public class TelemetryService {
     private final TelemetryRepository telemetryRepository;
     private final MissionRepository missionRepository;
     private final SensorRepository sensorRepository;
+    
+    private final TelemetryBySensorRepository telemetryBySensorRepository;
+    private final TelemetryByMissionRepository telemetryByMissionRepository;
 
     public TelemetryService(
             TelemetryRepository telemetryRepository,
             MissionRepository missionRepository,
-            SensorRepository sensorRepository) {
+            SensorRepository sensorRepository,
+            TelemetryBySensorRepository telemetryBySensorRepository,
+            TelemetryByMissionRepository telemetryByMissionRepository) {
 
         this.telemetryRepository = telemetryRepository;
         this.missionRepository = missionRepository;
         this.sensorRepository = sensorRepository;
+		this.telemetryBySensorRepository = telemetryBySensorRepository;
+		this.telemetryByMissionRepository = telemetryByMissionRepository;
     }
 
     private Sensor validateMissionAndSensor(Long missionId, Long sensorId) {
@@ -47,7 +55,29 @@ public class TelemetryService {
     	return sensor;
     }
     
-    public TelemetryReading create(Long missionId, Long sensorId, Double value) {
+    private TelemetryResponse toResponse(
+            TelemetryBySensor telemetry) {
+
+        return new TelemetryResponse(
+                telemetry.getKey().getMissionId(),
+                telemetry.getKey().getSensorId(),
+                telemetry.getReadingValue(),
+                telemetry.getKey().getReadAt(),
+                telemetry.getReceivedAt());
+    }
+    
+    private TelemetryResponse toResponse(
+            TelemetryByMission telemetry) {
+
+        return new TelemetryResponse(
+                telemetry.getKey().getMissionId(),
+                telemetry.getKey().getSensorId(),
+                telemetry.getReadingValue(),
+                telemetry.getKey().getReadAt(),
+                telemetry.getReceivedAt());
+    }
+    
+    public TelemetryResponse create(Long missionId, Long sensorId, Double value, Instant readAt) {
 
         Mission mission = missionRepository.findById(missionId)
                 .orElseThrow(() -> new MissionNotFoundException(missionId));
@@ -58,34 +88,69 @@ public class TelemetryService {
         
         validateMissionAndSensor(missionId, sensorId);
 
-        TelemetryReading reading = new TelemetryReading();
-
-        reading.setMissionId(missionId);
-        reading.setSensorId(sensorId);
-        reading.setReadingValue(value);
-
-        return telemetryRepository.save(reading);
+        Instant receivedAt = Instant.now();
+        
+        TelemetryBySensorKey sensorKey = new TelemetryBySensorKey(
+        		missionId, sensorId, readAt); 
+        
+        TelemetryBySensor telemetryBySensor = new TelemetryBySensor(sensorKey, receivedAt, value);
+        
+        telemetryBySensorRepository.save(telemetryBySensor);
+        
+        TelemetryByMissionKey missionKey = new TelemetryByMissionKey(
+        		missionId, readAt, sensorId); 
+        
+        TelemetryByMission telemetryByMission = new TelemetryByMission(missionKey, receivedAt, value);
+        
+        telemetryByMissionRepository.save(telemetryByMission);
+        
+        return new TelemetryResponse(
+                missionId,
+                sensorId,
+                value,
+                readAt,
+                receivedAt);
     }
 
-    public List<TelemetryReading> listByMission(Long missionId) {
+    public List<TelemetryResponse> listByMission(Long missionId) {
 
         missionRepository.findById(missionId)
                 .orElseThrow(() -> new MissionNotFoundException(missionId));
 
-        return telemetryRepository.findByMissionId(missionId);
+        return telemetryByMissionRepository
+                .findByKeyMissionId(
+                        missionId)
+                .stream()
+                .map(this::toResponse)
+                .toList();
     }
 
-    public List<TelemetryReading> listByMissionAndSensor(Long missionId, Long sensorId) {
-    	validateMissionAndSensor(missionId, sensorId);
-        
-        return telemetryRepository.findByMissionIdAndSensorId(missionId, sensorId);
-    }
-    
-    public TelemetryReading getLatestReading(Long missionId, Long sensorId) {
-    	return telemetryRepository
-                .findFirstByMissionIdAndSensorIdOrderByReceivedAtDesc(
+    public List<TelemetryResponse> listByMissionAndSensor(Long missionId, Long sensorId) {
+    	validateMissionAndSensor(
+                missionId,
+                sensorId);
+
+        return telemetryBySensorRepository
+                .findByKeyMissionIdAndKeySensorId(
                         missionId,
                         sensorId)
+                .stream()
+                .map(this::toResponse)
+                .toList();
+    }
+    
+    public TelemetryResponse getLatestReading(Long missionId, Long sensorId) {
+    	validateMissionAndSensor(missionId, sensorId);
+    	
+    	List<TelemetryBySensor> readings =
+                telemetryBySensorRepository
+                        .findByKeyMissionIdAndKeySensorId(
+                                missionId,
+                                sensorId);
+
+        return readings.stream()
+                .findFirst()
+                .map(this::toResponse)
                 .orElseThrow(() ->
                         new TelemetryNotFoundException(
                                 missionId,
@@ -93,13 +158,13 @@ public class TelemetryService {
     }
     
     public TelemetryStatsResponse getStats(Long missionId, Long sensorId) {
-		List<TelemetryReading> readings = listByMissionAndSensor(missionId, sensorId);    	
+		List<TelemetryResponse> readings = listByMissionAndSensor(missionId, sensorId);    	
 		
     	if (readings.isEmpty()) {
     		throw new TelemetryNotFoundException(missionId, sensorId);
     	}
     	
-    	DoubleSummaryStatistics stats = readings.stream().mapToDouble(TelemetryReading::getReadingValue).summaryStatistics();
+    	DoubleSummaryStatistics stats = readings.stream().mapToDouble(TelemetryResponse::readingValue).summaryStatistics();
     	
     	return new TelemetryStatsResponse(stats.getCount(), stats.getMin(), stats.getMax(), stats.getAverage());
     }

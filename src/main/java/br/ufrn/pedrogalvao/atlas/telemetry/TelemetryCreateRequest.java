@@ -1,32 +1,5 @@
 package br.ufrn.pedrogalvao.atlas.telemetry;
 
-public class TelemetryCreateRequest {
+import java.time.Instant;
 
-    private Long missionId;
-    private Long sensorId;
-    private Double value;
-
-    public Long getMissionId() {
-        return missionId;
-    }
-
-    public void setMissionId(Long missionId) {
-        this.missionId = missionId;
-    }
-
-    public Long getSensorId() {
-        return sensorId;
-    }
-
-    public void setSensorId(Long sensorId) {
-        this.sensorId = sensorId;
-    }
-
-    public Double getValue() {
-        return value;
-    }
-
-    public void setValue(Double value) {
-        this.value = value;
-    }
-}
+public record TelemetryCreateRequest(Long missionId, Long sensorId, Double readingValue, Instant readAt) {}

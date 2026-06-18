@@ -28,13 +28,14 @@ public class TelemetryController {
 	    description = "Armazena uma nova leitura de telemetria proveniente de um sensor."
 	)
     @PostMapping
-    public ResponseEntity<TelemetryReading> create(
-            @RequestBody TelemetryCreateRequest request) {
+    public ResponseEntity<TelemetryResponse> create(
+    		@RequestBody TelemetryCreateRequest request) {
 
-        TelemetryReading created = service.create(
-                request.getMissionId(),
-                request.getSensorId(),
-                request.getValue());
+        TelemetryResponse created = service.create(
+                request.missionId(),
+                request.sensorId(),
+                request.readingValue(),
+                request.readAt());
 
         return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }
@@ -44,7 +45,7 @@ public class TelemetryController {
 	    description = "Retorna todas as leituras associadas à missão."
 	)
     @GetMapping("/{missionId}")
-    public ResponseEntity<List<TelemetryReading>> listByMission(@PathVariable Long missionId) {
+    public ResponseEntity<List<TelemetryResponse>> listByMission(@PathVariable Long missionId) {
         return ResponseEntity.ok(service.listByMission(missionId));
     }
 
@@ -53,7 +54,7 @@ public class TelemetryController {
 	    description = "Retorna todas as leituras registradas para um sensor específico."
 	)
     @GetMapping("/{missionId}/{sensorId}")
-    public ResponseEntity<List<TelemetryReading>> listByMissionAndSensor(@PathVariable Long missionId, @PathVariable Long sensorId) {
+    public ResponseEntity<List<TelemetryResponse>> listByMissionAndSensor(@PathVariable Long missionId, @PathVariable Long sensorId) {
         return ResponseEntity.ok(service.listByMissionAndSensor(missionId, sensorId));
     }
     
@@ -62,7 +63,7 @@ public class TelemetryController {
 	    description = "Retorna a leitura mais recente registrada para o sensor."
 	)
     @GetMapping("/{missionId}/{sensorId}/latest")
-    public ResponseEntity<TelemetryReading> latest(@PathVariable Long missionId, @PathVariable Long sensorId) {
+    public ResponseEntity<TelemetryResponse> latest(@PathVariable Long missionId, @PathVariable Long sensorId) {
         return ResponseEntity.ok(service.getLatestReading(missionId, sensorId));
     }
     
