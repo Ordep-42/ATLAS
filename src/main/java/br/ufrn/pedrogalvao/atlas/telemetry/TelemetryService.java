@@ -3,6 +3,7 @@ package br.ufrn.pedrogalvao.atlas.telemetry;
 import java.time.Instant;
 import java.util.DoubleSummaryStatistics;
 import java.util.List;
+import java.util.Objects;
 
 import org.springframework.stereotype.Service;
 
@@ -20,7 +21,6 @@ import br.ufrn.pedrogalvao.atlas.sensor.SensorRepository;
 @Service
 public class TelemetryService {
 
-    private final TelemetryRepository telemetryRepository;
     private final MissionRepository missionRepository;
     private final SensorRepository sensorRepository;
     
@@ -28,13 +28,11 @@ public class TelemetryService {
     private final TelemetryByMissionRepository telemetryByMissionRepository;
 
     public TelemetryService(
-            TelemetryRepository telemetryRepository,
             MissionRepository missionRepository,
             SensorRepository sensorRepository,
             TelemetryBySensorRepository telemetryBySensorRepository,
             TelemetryByMissionRepository telemetryByMissionRepository) {
 
-        this.telemetryRepository = telemetryRepository;
         this.missionRepository = missionRepository;
         this.sensorRepository = sensorRepository;
 		this.telemetryBySensorRepository = telemetryBySensorRepository;
@@ -164,7 +162,13 @@ public class TelemetryService {
     		throw new TelemetryNotFoundException(missionId, sensorId);
     	}
     	
-    	DoubleSummaryStatistics stats = readings.stream().mapToDouble(TelemetryResponse::readingValue).summaryStatistics();
+    	DoubleSummaryStatistics stats = readings.stream().filter(Objects::nonNull).mapToDouble(TelemetryResponse::readingValue).summaryStatistics();
+    	
+    	if (stats.getCount() == 0) {
+    	    throw new TelemetryNotFoundException(
+    	            missionId,
+    	            sensorId);
+    	}
     	
     	return new TelemetryStatsResponse(stats.getCount(), stats.getMin(), stats.getMax(), stats.getAverage());
     }

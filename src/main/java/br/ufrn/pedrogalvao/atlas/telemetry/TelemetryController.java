@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.*;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 
 @Tag(
     name = "Telemetria",
@@ -29,7 +30,7 @@ public class TelemetryController {
 	)
     @PostMapping
     public ResponseEntity<TelemetryResponse> create(
-    		@RequestBody TelemetryCreateRequest request) {
+    		@Valid @RequestBody TelemetryCreateRequest request) {
 
         TelemetryResponse created = service.create(
                 request.missionId(),
