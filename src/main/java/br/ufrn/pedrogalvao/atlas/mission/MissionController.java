@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.*;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 
 @Tag(
     name = "Missões",
@@ -28,8 +29,8 @@ public class MissionController {
 	    description = "Cria uma nova missão no estado PLANNED."
     )
 	@PostMapping
-	public ResponseEntity<Mission> create(@RequestBody Mission mission) {
-		Mission created = service.create(mission.getName(), mission.getDescription());
+	public ResponseEntity<MissionCreatedResponse> create(@Valid @RequestBody MissionCreateRequest request) {
+		MissionCreatedResponse created = service.create(request);
 		return ResponseEntity.status(HttpStatus.CREATED).body(created);
 	}
 	
@@ -38,7 +39,7 @@ public class MissionController {
 	    description = "Retorna todas as missões cadastradas."
 	)
 	@GetMapping
-	public ResponseEntity<List<Mission>> findAll() {
+	public ResponseEntity<List<MissionCreatedResponse>> findAll() {
 		return ResponseEntity.ok(service.findAll());
 	}
 
@@ -47,10 +48,8 @@ public class MissionController {
 	    description = "Retorna os detalhes de uma missão específica."
 	)
 	@GetMapping("/{id}")
-    public ResponseEntity<Mission> findById(@PathVariable Long id) {
-        return service.findById(id)
-            .map(ResponseEntity::ok)
-            .orElse(ResponseEntity.notFound().build());
+    public ResponseEntity<MissionSummaryResponse> findById(@PathVariable Long id) {
+		return ResponseEntity.ok(service.findById(id));
     }
 
 	@Operation(
@@ -58,19 +57,10 @@ public class MissionController {
 	    description = "Atualiza o estado operacional da missão respeitando as regras de transição definidas pelo sistema."
 	)
     @PatchMapping("/{id}/status")
-    public ResponseEntity<Mission> updateStatus(@PathVariable Long id, @RequestBody MissionStatus status) {
-        Mission updated = service.updateStatus(id, status);
-        return ResponseEntity.ok(updated);
+    public ResponseEntity<MissionStatusUpdateResponse> updateStatus(@PathVariable Long id, @Valid @RequestBody MissionStatusUpdateRequest request) {
+        return ResponseEntity.ok(service.updateStatus(id, request));
     }
-    
-    @Operation(
-	    summary = "Obter resumo da missão",
-	    description = "Retorna informações consolidadas da missão, incluindo quantidade de sensores, leituras de telemetria e última atividade."
-	)
-    @GetMapping("/{id}/summary")
-    public ResponseEntity<MissionSummaryResponse> getSummary(@PathVariable Long id) {
-        return ResponseEntity.ok(service.getSummary(id));
-    }
+   
     
     @Operation(
 	    summary = "Obter últimas leituras da missão",

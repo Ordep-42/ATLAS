@@ -1,10 +1,8 @@
 package br.ufrn.pedrogalvao.atlas.mission;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
-import java.util.Optional;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -14,59 +12,84 @@ import br.ufrn.pedrogalvao.atlas.exception.MissionDeletionNotAllowedException;
 import br.ufrn.pedrogalvao.atlas.exception.MissionNotFoundException;
 import br.ufrn.pedrogalvao.atlas.sensor.Sensor;
 import br.ufrn.pedrogalvao.atlas.sensor.SensorRepository;
-import br.ufrn.pedrogalvao.atlas.telemetry.TelemetryReading;
-import br.ufrn.pedrogalvao.atlas.telemetry.TelemetryRepository;
+import br.ufrn.pedrogalvao.atlas.telemetry.TelemetryByMission;
+import br.ufrn.pedrogalvao.atlas.telemetry.TelemetryByMissionRepository;
+import br.ufrn.pedrogalvao.atlas.telemetry.TelemetryBySensor;
+import br.ufrn.pedrogalvao.atlas.telemetry.TelemetryBySensorRepository;
 
 @Service
 public class MissionService {
 	
 	private final MissionRepository repository;
 	private final SensorRepository sensorRepository;
-	private final TelemetryRepository telemetryRepository;
+	private final TelemetryBySensorRepository telemetryBySensorRepository;
+	private final TelemetryByMissionRepository telemetryByMissionRepository;
 	
-	public MissionService(MissionRepository repository, SensorRepository sensorRepository, TelemetryRepository telemetryRepository) {
+	public MissionService(MissionRepository repository, SensorRepository sensorRepository, TelemetryBySensorRepository telemetryBySensorRepository, TelemetryByMissionRepository telemetryByMissionRepository) {
 		this.repository = repository;
 		this.sensorRepository = sensorRepository;
-		this.telemetryRepository = telemetryRepository;
+		this.telemetryBySensorRepository = telemetryBySensorRepository;
+		this.telemetryByMissionRepository = telemetryByMissionRepository;
 	}
 	
-	public Mission create(String name, String description) {
+	public MissionCreatedResponse create(MissionCreateRequest request) {
 		Mission mission = new Mission();
-		mission.setName(name);
-		mission.setDescription(description);
-		return repository.save(mission);
+		mission.setName(request.name());
+		mission.setDescription(request.description());
+		repository.save(mission);
+		
+		return new MissionCreatedResponse(mission.getId(), mission.getName(), mission.getDescription(), mission.getStatus(), mission.getCreatedAt());
 	}
 	
-	public List<Mission> findAll() {
-		return repository.findAll();
+	public List<MissionCreatedResponse> findAll() {
+		List<Mission> missions = repository.findAll();
+		
+		List<MissionCreatedResponse> result = new ArrayList<>();
+		
+		for (Mission mission : missions) {
+			result.add(new MissionCreatedResponse(mission.getId(), mission.getName(), mission.getDescription(), mission.getStatus(), mission.getCreatedAt()));
+		}
+		
+		return result;
 	}
 	
-	public Optional<Mission> findById(Long id) {
-		return repository.findById(id);
+	public MissionSummaryResponse findById(Long missionId) {
+		Mission mission = repository.findById(missionId)
+				.orElseThrow(() -> new MissionNotFoundException(missionId));
+		
+		long sensorCount = sensorRepository.countByMissionId(missionId);
+
+		List<TelemetryByMission> readings = telemetryByMissionRepository.findByKeyMissionId(missionId);
+		
+	    long telemetryCount = readings.size();
+	    
+	    Instant lastTelemetryAt = readings.isEmpty() ? null : readings.get(0).getReceivedAt();
+	    
+	    return new MissionSummaryResponse(mission.getId(), mission.getName(), mission.getDescription(), mission.getStatus(), sensorCount, telemetryCount, mission.getCreatedAt(), mission.getStartedAt(), lastTelemetryAt, mission.getFinishedAt());
 	}
-	
-	public Mission updateStatus(Long id, MissionStatus newStatus) {
+	    
+	public MissionStatusUpdateResponse updateStatus(Long id, MissionStatusUpdateRequest request) {
 		Mission mission = repository.findById(id)
 				.orElseThrow(() -> new MissionNotFoundException(id));
 		
-		if (mission.getStatus() == newStatus) {
-		    return mission;
-		}
+		MissionStatus newStatus = request.status();
+		
+		
+		
+		if (mission.getStatus() == newStatus || !isValidTransition(mission.getStatus(), newStatus))
+		    throw new InvalidTransitionException(mission.getStatus(), newStatus);
 		
 		if (newStatus == MissionStatus.ACTIVE && mission.getStartedAt() == null) {
-			mission.setStartedAt(LocalDateTime.now());
+			mission.setStartedAt(Instant.now());
+		} else if (newStatus == MissionStatus.COMPLETED || newStatus == MissionStatus.ABORTED) {
+			mission.setFinishedAt(Instant.now());
 		}
 		
-		if (newStatus == MissionStatus.COMPLETED || newStatus == MissionStatus.ABORTED) {
-			mission.setFinishedAt(LocalDateTime.now());
-		}
-		
-		if (!isValidTransition(mission.getStatus(), newStatus)) {
-			throw new InvalidTransitionException(mission.getStatus(), newStatus);
-		}
 		
 		mission.setStatus(newStatus);
-		return repository.save(mission);
+		repository.save(mission);
+		
+		return new MissionStatusUpdateResponse(mission.getId(), mission.getName(), mission.getStatus(), mission.getCreatedAt(), mission.getStartedAt(), mission.getFinishedAt());
 	}
 	
 	@Transactional
@@ -78,7 +101,7 @@ public class MissionService {
 			throw new MissionDeletionNotAllowedException(mission.getStatus());
 		}
 		
-		telemetryRepository.deleteByMissionId(id);
+		//telemetryRepository.deleteByMissionId(id);
 		sensorRepository.deleteByMissionId(id);
 	    repository.deleteById(id);
 	}
@@ -103,19 +126,6 @@ public class MissionService {
 		}
 	}
 	
-	public MissionSummaryResponse getSummary(Long missionId) {
-		Mission mission = repository.findById(missionId)
-				.orElseThrow(() -> new MissionNotFoundException(missionId));
-		
-		long sensorCount = sensorRepository.countByMissionId(missionId);
-
-		LocalDateTime lastTelemetryAt = telemetryRepository.findFirstByMissionIdOrderByReceivedAtDesc(missionId)
-				.map(TelemetryReading::getReceivedAt).orElse(null);
-	    long telemetryCount = telemetryRepository.countByMissionId(missionId);
-	    
-	    return new MissionSummaryResponse(mission.getId(), mission.getName(), mission.getStatus(), sensorCount, telemetryCount, mission.getCreatedAt(), mission.getStartedAt(), lastTelemetryAt);
-	}
-	
 	public List<MissionLatestReadingResponse> getLatestReadings(Long missionId) {
 		repository.findById(missionId).orElseThrow(() -> new MissionNotFoundException(missionId));
 		List<Sensor> sensors = sensorRepository.findByMissionId(missionId);
@@ -123,9 +133,19 @@ public class MissionService {
 		List<MissionLatestReadingResponse> result = new ArrayList<>();
 		
 		for (Sensor sensor : sensors) {
-		    List<TelemetryReading> readings = telemetryRepository.findByMissionIdAndSensorId(missionId, sensor.getId());
-		    readings.stream().max(Comparator.comparing(TelemetryReading::getReceivedAt)).ifPresent(latest -> result.add(
-                    new MissionLatestReadingResponse(sensor.getId(), sensor.getName(), latest.getReadingValue(), latest.getReceivedAt())));
+		    List<TelemetryBySensor> readings = telemetryBySensorRepository.findByKeyMissionIdAndKeySensorId(missionId, sensor.getId());
+		    
+		    if (!readings.isEmpty()) {
+		    	TelemetryBySensor latest =
+	                    readings.get(0);
+		    
+		    	result.add(new MissionLatestReadingResponse(
+	    					sensor.getId(),
+                            sensor.getName(),
+                            latest.getReadingValue(),
+                            latest.getKey().getReadAt(),
+                            latest.getReceivedAt()));
+		    }
 		}
 		
 		return result;

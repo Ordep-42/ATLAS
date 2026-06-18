@@ -1,6 +1,6 @@
 package br.ufrn.pedrogalvao.atlas.mission;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 
 import jakarta.persistence.*;
 
@@ -18,13 +18,13 @@ public class Mission {
 	@Enumerated(EnumType.STRING)
 	private MissionStatus status;
 	
-	private LocalDateTime createdAt;
-	private LocalDateTime startedAt;
-	private LocalDateTime finishedAt;
+	private Instant createdAt;
+	private Instant startedAt;
+	private Instant finishedAt;
 	
 	public Mission() {
 		this.status = MissionStatus.PLANNED;
-		this.createdAt = LocalDateTime.now();
+		this.createdAt = Instant.now();
 	}
 	
 	public Long getId() { return id; }
@@ -39,12 +39,12 @@ public class Mission {
     public MissionStatus getStatus() { return status; }
     public void setStatus(MissionStatus status) { this.status = status; }
 
-    public LocalDateTime getCreatedAt() { return createdAt; }
-    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+    public Instant getCreatedAt() { return createdAt; }
+    public void setCreatedAt(Instant createdAt) { this.createdAt = createdAt; }
 
-    public LocalDateTime getStartedAt() { return startedAt; }
-    public void setStartedAt(LocalDateTime startedAt) { this.startedAt = startedAt; }
+    public Instant getStartedAt() { return startedAt; }
+    public void setStartedAt(Instant startedAt) { this.startedAt = startedAt; }
 
-    public LocalDateTime getFinishedAt() { return finishedAt; }
-    public void setFinishedAt(LocalDateTime finishedAt) { this.finishedAt = finishedAt; }
+    public Instant getFinishedAt() { return finishedAt; }
+    public void setFinishedAt(Instant finishedAt) { this.finishedAt = finishedAt; }
 }
