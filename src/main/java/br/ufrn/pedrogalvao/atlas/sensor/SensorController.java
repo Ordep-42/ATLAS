@@ -32,9 +32,9 @@ public class SensorController {
 
         Sensor created = service.create(
                 missionId,
-                request.getName(),
-                request.getType(),
-                request.getUnit());
+                request.name(),
+                request.type(),
+                request.unit());
 
         return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }

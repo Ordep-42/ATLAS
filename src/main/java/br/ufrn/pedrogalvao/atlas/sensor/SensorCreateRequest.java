@@ -1,32 +1,17 @@
 package br.ufrn.pedrogalvao.atlas.sensor;
 
-public class SensorCreateRequest {
-	
-	private String name;
-    private SensorType type;
-    private String unit;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 
-    public String getName() {
-        return name;
-    }
+public record SensorCreateRequest(
 
-    public void setName(String name) {
-        this.name = name;
-    }
+        @NotBlank(message = "Nome do sensor é obrigatório")
+        String name,
 
-    public SensorType getType() {
-        return type;
-    }
+        @NotNull(message = "Tipo do sensor é obrigatório")
+        SensorType type,
 
-    public void setType(SensorType type) {
-        this.type = type;
-    }
+        @NotBlank(message = "Unidade é obrigatória")
+        String unit
 
-    public String getUnit() {
-        return unit;
-    }
-
-    public void setUnit(String unit) {
-        this.unit = unit;
-    }
-}
+) {}
