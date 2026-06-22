@@ -2,29 +2,45 @@ package br.ufrn.pedrogalvao.atlas.mission;
 
 import java.time.Instant;
 
+import org.hibernate.annotations.CreationTimestamp;
+
 import jakarta.persistence.*;
 
 @Entity
-@Table(name = "missions")
+@Table(
+	name = "missions",
+    indexes = {
+        @Index(
+            name = "idx_mission_status",
+            columnList = "status"
+        )
+    }
+)
 public class Mission {
 	
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
 	
+	@Column(nullable = false, length = 100)
 	private String name;
+	
+	@Column(length = 300)
 	private String description;
 	
 	@Enumerated(EnumType.STRING)
+	@Column(nullable = false)
 	private MissionStatus status;
 	
+	@Column(nullable = false)
+	@CreationTimestamp
 	private Instant createdAt;
+	
 	private Instant startedAt;
 	private Instant finishedAt;
 	
 	public Mission() {
 		this.status = MissionStatus.PLANNED;
-		this.createdAt = Instant.now();
 	}
 	
 	public Long getId() { return id; }

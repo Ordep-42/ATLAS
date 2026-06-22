@@ -33,10 +33,14 @@ public class Sensor {
 	@Column(nullable = false)
 	private Integer sensorNumber;
 	
+	@Column(nullable = false, length = 50)
 	private String name;
 	
 	@Enumerated(EnumType.STRING)
+	@Column(nullable = false)
 	private SensorType type;
+	
+	@Column(length = 10)
 	private String unit;
 	
 	public Sensor(){}
