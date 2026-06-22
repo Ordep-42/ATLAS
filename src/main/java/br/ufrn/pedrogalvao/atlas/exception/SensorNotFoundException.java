@@ -6,4 +6,8 @@ public class SensorNotFoundException extends ResourceNotFoundException{
 	public SensorNotFoundException(Long id) {
 		super("Sensor não encontrado: " + id);
 	}
+	
+	public SensorNotFoundException(Long missionId, int sensorNumber) {
+		super("Sensor " + sensorNumber + " não encontrado na missão " + missionId);
+	}
 }

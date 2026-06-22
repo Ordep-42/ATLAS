@@ -52,27 +52,29 @@ public class SensorController {
     
     @Operation(
 	    summary = "Buscar sensor",
-	    description = "Retorna os detalhes de um sensor específico."
+	    description = "Retorna os detalhes de um sensor específico da missão."
 	)
-    @GetMapping("/{sensorId}")
+    @GetMapping("/{sensorNumber}")
     public ResponseEntity<Sensor> findById(
             @PathVariable Long missionId,
-            @PathVariable Long sensorId) {
+            @PathVariable Integer sensorNumber) {
 
         return ResponseEntity.ok(
-                service.findById(sensorId));
+                service.findByMissionAndNumber(
+                        missionId,
+                        sensorNumber));
     }
     
     @Operation(
 	    summary = "Excluir sensor",
 	    description = "Remove um sensor da missão."
 	)
-    @DeleteMapping("/{sensorId}")
+    @DeleteMapping("/{sensorNumber}")
     public ResponseEntity<Void> delete(
             @PathVariable Long missionId,
-            @PathVariable Long sensorId) {
+            @PathVariable Integer sensorNumber) {
 
-        service.delete(missionId, sensorId);
+        service.delete(missionId, sensorNumber);
 
         return ResponseEntity.noContent().build();
     }

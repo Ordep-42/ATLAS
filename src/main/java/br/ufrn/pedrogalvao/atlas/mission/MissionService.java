@@ -22,6 +22,7 @@ public class MissionService {
 	
 	private final MissionRepository repository;
 	private final SensorRepository sensorRepository;
+	
 	private final TelemetryBySensorRepository telemetryBySensorRepository;
 	private final TelemetryByMissionRepository telemetryByMissionRepository;
 	
@@ -140,7 +141,7 @@ public class MissionService {
 	                    readings.get(0);
 		    
 		    	result.add(new MissionLatestReadingResponse(
-	    					sensor.getId(),
+	    					sensor.getSensorNumber(),
                             sensor.getName(),
                             latest.getReadingValue(),
                             latest.getKey().getReadAt(),

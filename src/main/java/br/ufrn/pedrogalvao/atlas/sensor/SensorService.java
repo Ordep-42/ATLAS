@@ -26,6 +26,36 @@ public class SensorService {
         this.sensorRepository = sensorRepository;
         this.missionRepository = missionRepository;
     }
+    
+    private int getNextSensorNumber(
+            Long missionId) {
+
+        return sensorRepository
+                .findTopByMissionIdOrderBySensorNumberDesc(
+                        missionId)
+                .map(sensor ->
+                        sensor.getSensorNumber() + 1)
+                .orElse(1);
+    }
+    
+    private Sensor findSensor(
+            Long missionId,
+            Integer sensorNumber) {
+
+        missionRepository.findById(missionId)
+                .orElseThrow(() ->
+                        new MissionNotFoundException(
+                                missionId));
+
+        return sensorRepository
+                .findByMissionIdAndSensorNumber(
+                        missionId,
+                        sensorNumber)
+                .orElseThrow(() ->
+                        new SensorNotFoundException(
+                                missionId,
+                                sensorNumber));
+    }
 
     public Sensor create(Long missionId, String name, SensorType type, String unit) {
         Mission mission = missionRepository.findById(missionId)
@@ -35,12 +65,14 @@ public class SensorService {
         	throw new SensorCreationNotAllowedException();
         }
         
+        int nextNumber = getNextSensorNumber(missionId);
         Sensor sensor = new Sensor();
 
         sensor.setMissionId(missionId);
         sensor.setName(name);
         sensor.setType(type);
         sensor.setUnit(unit);
+        sensor.setSensorNumber(nextNumber);
 
         return sensorRepository.save(sensor);
     }
@@ -52,21 +84,31 @@ public class SensorService {
         return sensorRepository.findByMissionId(missionId);
     }
 
-    public Sensor findById(Long sensorId) {
-        return sensorRepository.findById(sensorId)
-                .orElseThrow(() -> new SensorNotFoundException(sensorId));
+    public Sensor findByMissionAndNumber(
+            Long missionId,
+            Integer sensorNumber) {
+    	return findSensor(
+                missionId,
+                sensorNumber);
     }
 
     @Transactional
-    public void delete(Long missionId, Long sensorId) {
+    public void delete(Long missionId, Integer sensorNumber) {
     	Mission mission = missionRepository.findById(missionId)
-                .orElseThrow(() -> new MissionNotFoundException(missionId));
-    	
-    	sensorRepository.findById(sensorId)
-        		.orElseThrow(() -> new SensorNotFoundException(sensorId));
-    	if (mission.getStatus() != MissionStatus.PLANNED) {
-        	throw new SensorDeletionNotAllowedException();
+                .orElseThrow(() ->
+                        new MissionNotFoundException(
+                                missionId));
+
+        if (mission.getStatus() != MissionStatus.PLANNED) {
+            throw new SensorDeletionNotAllowedException();
         }
-    	sensorRepository.deleteById(sensorId);
+
+        Sensor sensor =
+                findSensor(
+                        missionId,
+                        sensorNumber);
+
+        sensorRepository.deleteById(
+                sensor.getId());
     }
 }

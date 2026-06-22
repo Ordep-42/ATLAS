@@ -2,10 +2,13 @@ package br.ufrn.pedrogalvao.atlas.mission;
 
 import java.util.List;
 
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import br.ufrn.pedrogalvao.atlas.export.ExportService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
@@ -19,9 +22,11 @@ import jakarta.validation.Valid;
 public class MissionController {
 
 	private final MissionService service;
+	private final ExportService exportService;
 	
-	public MissionController(MissionService service) {
+	public MissionController(MissionService service, ExportService exportService) {
 		this.service = service;
+		this.exportService = exportService;
 	}
 	
 	@Operation(
@@ -44,7 +49,7 @@ public class MissionController {
 	}
 
 	@Operation(
-	    summary = "Buscar missão por ID",
+	    summary = "Obter resumo da missão",
 	    description = "Retorna os detalhes de uma missão específica."
 	)
 	@GetMapping("/{id}")
@@ -70,6 +75,28 @@ public class MissionController {
     public ResponseEntity<List<MissionLatestReadingResponse>> getLatestReadings(@PathVariable Long id) {
         return ResponseEntity.ok(service.getLatestReadings(id));
     }
+    
+    @Operation(
+    	    summary = "Exporta os dados da missão como um arquivo CSV",
+    	    description = "Retorna um arquivo dos dados dos sensores da missão."
+	)
+    @GetMapping("/{id}/export")
+    public ResponseEntity<byte[]> exportReadings(@PathVariable Long id) {
+    	 String csv =
+    			 exportService.exportMissionTelemetry(id);
+
+    	    return ResponseEntity.ok()
+    	            .header(
+    	                    HttpHeaders.CONTENT_DISPOSITION,
+    	                    "attachment; filename=mission-"
+    	                            + id
+    	                            + "-telemetry.csv")
+    	            .contentType(
+    	                    MediaType.parseMediaType(
+    	                            "text/csv"))
+    	            .body(csv.getBytes());
+    }
+    
     
     @Operation(
 	    summary = "Excluir missão",

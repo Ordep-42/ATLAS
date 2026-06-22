@@ -11,6 +11,9 @@ public class TelemetryBySensor {
 	
 	@PrimaryKey
 	private TelemetryBySensorKey key;
+
+	@Column("sensor_number")
+	private Integer sensorNumber;
 	
 	@Column("received_at")
 	private Instant receivedAt;
@@ -18,8 +21,9 @@ public class TelemetryBySensor {
 	@Column("reading_value")
 	private Double readingValue;
 
-	public TelemetryBySensor(TelemetryBySensorKey key, Instant receivedAt, Double readingValue) {
+	public TelemetryBySensor(TelemetryBySensorKey key, Integer sensorNumber, Instant receivedAt, Double readingValue) {
 		this.key = key;
+		this.sensorNumber = sensorNumber;
 		this.receivedAt = receivedAt;
 		this.readingValue = readingValue;
 	}
@@ -46,5 +50,13 @@ public class TelemetryBySensor {
 
 	public void setReadingValue(Double readingValue) {
 		this.readingValue = readingValue;
+	}
+
+	public Integer getSensorNumber() {
+		return sensorNumber;
+	}
+
+	public void setSensorNumber(Integer sensorNumber) {
+		this.sensorNumber = sensorNumber;
 	}
 }

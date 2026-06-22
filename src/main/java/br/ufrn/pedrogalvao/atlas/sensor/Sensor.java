@@ -5,6 +5,15 @@ import jakarta.persistence.*;
 @Entity
 @Table(
 	name = "sensors",
+	uniqueConstraints = {
+			@UniqueConstraint(
+		    columnNames = {
+		        "missionId",
+		        "sensorNumber"
+		    }
+		)
+	},
+	
     indexes = {
         @Index(
             name = "idx_sensor_mission",
@@ -20,6 +29,10 @@ public class Sensor {
 	
 	@Column(nullable = false)
 	private Long missionId;
+	
+	@Column(nullable = false)
+	private Integer sensorNumber;
+	
 	private String name;
 	
 	@Enumerated(EnumType.STRING)
@@ -51,6 +64,14 @@ public class Sensor {
         this.missionId = missionId;
     }
 
+    public Integer getSensorNumber() {
+    	return sensorNumber;
+    }
+    
+    public void setSensorNumber(Integer sensorNumber) {
+    	this.sensorNumber = sensorNumber;
+    }
+    
     public String getName() {
         return name;
     }
@@ -59,7 +80,7 @@ public class Sensor {
         this.name = name;
     }
 
-    public SensorType getType() {
+	public SensorType getType() {
         return type;
     }
 

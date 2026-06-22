@@ -5,7 +5,7 @@ import java.time.Instant;
 public record TelemetryResponse(
 		Long missionId,
 
-        Long sensorId,
+        Integer sensorNumber,
 
         Double readingValue,
 

@@ -8,8 +8,8 @@ public record TelemetryCreateRequest(
 		@NotNull(message = "Mission ID é obrigatório")
 		Long missionId, 
 		
-		@NotNull(message = "Sensor ID é obrigatório")
-		Long sensorId, 
+		@NotNull(message = "Numero do sensor é obrigatório")
+		Integer sensorNumber, 
 		
 		@NotNull(message = "Valor da leitura é obrigatório")
 		Double readingValue, 
